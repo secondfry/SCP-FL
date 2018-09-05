@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 enum Direction {
   north,
@@ -9,11 +10,25 @@ enum Direction {
   west,
 };
 
-class Room {
+enum DirectionVariant {
+  same,
+  right,
+  opposite,
+  left
+};
 
+struct RoomData {
+  std::vector<DirectionVariant> exits;
+  int x;
+  int y;
+  int z;
+  FName name;
+};
+
+class Room {
 private:
-  std::vector<Room*> neighbours;
-  int exits = 4;
+  std::map<Direction, Room*> neighbours;
+  RoomData* data;
 
   static Direction Reverse(const Direction direction) {
     switch (direction) {
@@ -30,11 +45,11 @@ private:
     }
   }
 
-  Room* GetAdjacent(const Direction direction) const {
+  Room* GetAdjacent(const Direction direction) {
     return this->neighbours[direction];
   }
 
-  Room* GetOpposite(const Direction direction) const {
+  Room* GetOpposite(const Direction direction) {
     return this->GetAdjacent(Room::Reverse(direction));
   }
 
@@ -48,12 +63,6 @@ private:
   }
 
 public:
-  Room(int exits) : exits(exits) {
-    this->neighbours.resize(4);
-  }
-
-  Room() : Room(4) {}
-
   Room* CreateAdjacent(const Direction direction) {
     Room* ret = new Room();
     this->SetAdjacent(direction, ret);
@@ -61,15 +70,38 @@ public:
     return ret;
   }
 
-  bool HasAdjacent(const Direction direction) const {
+  bool HasAdjacent(const Direction direction) {
     Room* adjacent = this->GetAdjacent(direction);
     return adjacent != nullptr;
   }
 
-  int GetExits() const { return exits; }
-  Room* SetExits(int exits) {
-    this->exits = exits;
+  Room* AddExit(const DirectionVariant dv) {
+    this->data->exits.push_back(dv);
     return this;
+  }
+
+  Room* SetName(const FName name) {
+    this->data->name = name;
+    return this;
+  }
+
+  Room* SetPlace(const int x, const int y, const int z) {
+    this->data->x = x;
+    this->data->y = y;
+    this->data->z = z;
+    return this;
+  }
+
+  int GetPlaceX() const {
+    return this->data->x;
+  }
+
+  int GetPlaceY() const {
+    return this->data->y;
+  }
+
+  int GetPlaceZ() const {
+    return this->data->z;
   }
 
 };

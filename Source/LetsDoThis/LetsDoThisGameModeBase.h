@@ -2,17 +2,21 @@
 
 #pragma once
 
+#include <vector>
+
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
+#include "Maze/RoomDataStruct.h"
+#include "Maze/Maze.h"
+
 #include "LetsDoThisGameModeBase.generated.h"
 
 /**
  *
  */
 UCLASS()
-
 class LETSDOTHIS_API ALetsDoThisGameModeBase : public AGameModeBase {
   GENERATED_BODY()
 
@@ -39,5 +43,10 @@ public:
     }
 
     return FoundActors[0];
+  }
+
+  UFUNCTION(BlueprintCallable, Category = "Map Generation")
+  static TArray<FRoomDataStruct> generateMap() {
+    return Maze::generateMap();
   }
 };
