@@ -27,6 +27,16 @@ struct Coordinates {
   int z;
 };
 
+inline Coordinates operator*(Coordinates coords, Direction dir) {
+  switch (dir) {
+  case Direction::north: return coords;
+  case Direction::east: return Coordinates{ coords.y, coords.x * -1, coords.z };
+  case Direction::south: return Coordinates{ coords.x * -1, coords.y * -1, coords.z };
+  case Direction::west: return Coordinates{ coords.y * -1, coords.x, coords.z };
+  }
+  return Coordinates{};
+}
+
 struct RoomData {
   std::vector<DirectionVariant> exits;
   Coordinates coords;

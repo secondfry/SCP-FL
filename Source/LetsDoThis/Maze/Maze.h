@@ -31,6 +31,9 @@ public:
   static bool isNextRoomNotInBounds(int nextRoomLinearID);
   static bool isNextRoomPlaceOccupied(int x, int y);
   static void createRoute(Room* prevRoom, Room* nextRoom);
+  static void Maze::AddDirections(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX, int minY, int maxY);
+  static void AddDirectionsVertical(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minY, int maxY);
+  static void AddDirectionsHorizontal(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX);
 };
 
 enum SearchState {

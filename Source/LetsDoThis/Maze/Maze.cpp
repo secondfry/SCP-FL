@@ -70,7 +70,7 @@ void Maze::placeStart() {
 
 void Maze::placeAllKeyRooms() {
   auto prevRoom = Maze::start;
-  for (const FName name : { "CR_914", "CR_173" }) {
+  for (const FName name : { "CR_914", "CR_173", "ROOM1", "ROOM2" }) {
     prevRoom = Maze::placeNextKeyRoom(prevRoom, name);
   }
 }
@@ -126,16 +126,11 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
   Room* start = keyStart->CreateAdjacent(keyStart->GetFirstExit());
   Room* finish = keyFinish->CreateAdjacent(keyFinish->GetFirstExit());
 
-  // Widen search for dem lulz
+  // Widen search for reasons
   const int minY = start->GetPlaceY() > finish->GetPlaceY() ? finish->GetPlaceY() - 1 : start->GetPlaceY() - 1;
   const int maxY = start->GetPlaceY() > finish->GetPlaceY() ? start->GetPlaceY() + 1 : finish->GetPlaceY() + 1;
   const int minX = start->GetPlaceX() > finish->GetPlaceX() ? finish->GetPlaceX() - 1 : start->GetPlaceX() - 1;
   const int maxX = start->GetPlaceX() > finish->GetPlaceX() ? start->GetPlaceX() + 1 : finish->GetPlaceX() + 1;
-
-  // const int minY = start->GetPlaceY() > finish->GetPlaceY() ? finish->GetPlaceY() : start->GetPlaceY();
-  // const int maxY = start->GetPlaceY() > finish->GetPlaceY() ? start->GetPlaceY() : finish->GetPlaceY();
-  // const int minX = start->GetPlaceX() > finish->GetPlaceX() ? finish->GetPlaceX() : start->GetPlaceX();
-  // const int maxX = start->GetPlaceX() > finish->GetPlaceX() ? start->GetPlaceX() : finish->GetPlaceX();
 
   // Start and finish are free by default
   Maze::heightMap[start->GetPlaceY()][start->GetPlaceX()] = 0;
@@ -163,33 +158,18 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
   queue.emplace_back(std::pair<int, int>{ start->GetPlaceY(), start->GetPlaceX() });
 
   // Choose step
-  std::pair<int, int> step = { start->GetPlaceY() > finish->GetPlaceY() ? -1 : 1, start->GetPlaceX() > finish->GetPlaceX() ? -1 : 1 };
-
-  int counter = 0;
-
+  std::vector<std::pair<int, int>> directions;
+  
   // Levit's magic
   while (!queue.empty()) {
-    counter++;
-
-    if (counter > 50) {
-      break;
-    }
-
     std::pair<int, int> coord = queue.front();
     queue.pop_front();
     Maze::stateMap[coord.first][coord.second] = SearchState::checked;
 
-    for (std::pair<int, int> to : std::vector<std::pair<int, int>> { { coord.first + step.first, coord.second }, { coord.first, coord.second + step.second } }) {
-      counter++;
+    directions.clear();
+    Maze::AddDirections(directions, coord, minX, maxX, minY, maxY);
 
-      if (counter > 50) {
-        break;
-      }
-
-      if (to.first > maxY || to.first < minY || to.second > maxX || to.second < maxX) {
-        continue;
-      }
-
+    for (std::pair<int, int> to : directions) {
       int length = Maze::heightMap[to.first][to.second];
       if (Maze::costMap[to.first][to.second] <= Maze::costMap[coord.first][coord.second] + length) {
         continue;
@@ -207,9 +187,8 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
     }
   }
 
-  counter = 0;
-
   if (Maze::jumpMap[finish->GetPlaceY()][finish->GetPlaceX()] == std::pair<int, int> {INT_MIN, INT_MIN}) {
+    // TODO trigger event instead of panic message
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "FUCK THIS SHIT");
   } else {
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "IT WORKS");
@@ -221,18 +200,46 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
       jump = Maze::jumpMap[jump.first][jump.second]
     ) {
       path.push_back(jump);
-
-      counter++;
-
-      if (counter > 50) {
-        break;
-      }
     }
     std::reverse(path.begin(), path.end());
 
     for (size_t i = 0; i < path.size(); ++i) {
+      Maze::heightMap[path[i].first][path[i].second] = 0;
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, (std::string("X: ") + std::to_string(path[i].second) + std::string(" Y: ") + std::to_string(path[i].first)).c_str());
     }
   }
   
+}
+
+void Maze::AddDirections(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX, int minY, int maxY) {
+  Maze::AddDirectionsVertical(directions, coords, minY, maxY);
+  Maze::AddDirectionsHorizontal(directions, coords, minX, maxX);
+}
+
+void Maze::AddDirectionsVertical(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minY, int maxY) {
+  if (minY == maxY) {
+    return;
+  }
+
+  if (coords.first > minY) {
+    directions.push_back(std::pair<int, int> { coords.first - 1, coords.second });
+  }
+
+  if (coords.first < maxY) {
+    directions.push_back(std::pair<int, int> { coords.first + 1, coords.second });
+  }
+}
+
+void Maze::AddDirectionsHorizontal(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX) {
+  if (minX == maxX) {
+    return;
+  }
+
+  if (coords.second > minX) {
+    directions.push_back(std::pair<int, int> { coords.first, coords.second - 1 });
+  }
+
+  if (coords.second < maxX) {
+    directions.push_back(std::pair<int, int> { coords.first, coords.second + 1 });
+  }
 }
