@@ -9,10 +9,10 @@ FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelI
   PackageNameToLoad = LevelInstance->PackageNameToLoad;
   Location = LevelInstance->LevelTransform.GetLocation();
   Rotation = LevelInstance->LevelTransform.GetRotation().Rotator();
-  bShouldBeLoaded = LevelInstance->bShouldBeLoaded;
-  bShouldBeVisible = LevelInstance->bShouldBeVisible;
+  bShouldBeLoaded = LevelInstance->ShouldBeLoaded();
+  bShouldBeVisible = LevelInstance->ShouldBeVisible();
   bShouldBlockOnLoad = LevelInstance->bShouldBlockOnLoad;
-  LODIndex = LevelInstance->LevelLODIndex;
+  LODIndex = LevelInstance->GetLevelLODIndex();
 };
 
 FLevelStreamInstanceInfo UTriHard::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance) {
@@ -26,7 +26,8 @@ void UTriHard::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStr
   }
 
   bool bAlreadyExists = false;
-  for (auto StreamingLevel : World->StreamingLevels) {
+  
+  for (auto StreamingLevel : World->GetStreamingLevels()) {
     if (StreamingLevel->GetWorldAssetPackageFName() == LevelInstanceInfo.PackageName) {
       bAlreadyExists = true;
       // KRIS : Would normally log a warning here! Is there a LogVictory?
@@ -49,17 +50,16 @@ void UTriHard::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStr
   ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
   StreamingLevel->SetWorldAssetByPackageName(PackageName);
   StreamingLevel->LevelColor = FColor::MakeRandomColor();
-  StreamingLevel->bShouldBeLoaded = LevelInstanceInfo.bShouldBeLoaded;
-  StreamingLevel->bShouldBeVisible = LevelInstanceInfo.bShouldBeVisible;
+  StreamingLevel->SetShouldBeLoaded(LevelInstanceInfo.bShouldBeLoaded);
+  StreamingLevel->SetShouldBeVisible(LevelInstanceInfo.bShouldBeVisible);
   StreamingLevel->bShouldBlockOnLoad = LevelInstanceInfo.bShouldBlockOnLoad;
-  StreamingLevel->bInitiallyLoaded = true;
-  StreamingLevel->bInitiallyVisible = true;
+  StreamingLevel->SetShouldBeVisible(true);
   // Transform
   StreamingLevel->LevelTransform = FTransform(LevelInstanceInfo.Rotation, LevelInstanceInfo.Location);
   // Map to Load
   StreamingLevel->PackageNameToLoad = LevelInstanceInfo.PackageNameToLoad;
   // Add the new level to world.
-  World->StreamingLevels.Add(StreamingLevel);
+  World->AddStreamingLevel(StreamingLevel);
   
   // WHY?
   // World->FlushLevelStreaming(EFlushLevelStreamingType::Full);

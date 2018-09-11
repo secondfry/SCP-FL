@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{B53242C9-4BE5-7F65-499C-EC9D94A80376}",
+	"EngineAssociation": "{E16E8677-403F-0D0C-532D-CA99CEA94548}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -11,13 +11,6 @@
 			"AdditionalDependencies": [
 				"Engine"
 			]
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "VictoryBPLibrary",
-			"Enabled": true,
-			"MarketplaceURL": "http://www.ue4code.com"
 		}
 	]
 }

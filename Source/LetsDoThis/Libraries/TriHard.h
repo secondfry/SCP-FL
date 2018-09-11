@@ -12,7 +12,6 @@
 #include "TriHard.generated.h"
 
 USTRUCT(BlueprintType)
-
 struct FLevelStreamInstanceInfo {
   GENERATED_USTRUCT_BODY()
 
