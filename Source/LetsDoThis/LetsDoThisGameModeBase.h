@@ -18,11 +18,5 @@ class LETSDOTHIS_API ALetsDoThisGameModeBase : public AGameModeBase {
 
 public:
   UFUNCTION(BlueprintCallable, Category = "Map Generation")
-  static TArray<FRoomDataStruct> GenerateMap(FString seed = "") {
-    if (seed == "") {
-      seed = Maze::GenerateSeed();
-    }
-
-    return *Maze::GenerateMap(seed);
-  }
+  static TArray<FRoomDataStruct> GenerateMap(FString seed = "");
 };

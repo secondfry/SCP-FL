@@ -287,10 +287,6 @@ void Maze::CreateRoute(Room* keyStart, Room* keyFinish) {
     for (size_t i = 0; i < path.size(); ++i) {
       Maze::heightMap[path[i].first][path[i].second] = 0;
       Maze::SafeCreateCorridor(path[i].second, path[i].first);
-
-#ifdef SF_DEBUG_MAZE
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, (std::string("X: ") + std::to_string(path[i].second) + std::string(" Y: ") + std::to_string(path[i].first)).c_str());
-#endif
     }
   }
 
@@ -307,11 +303,11 @@ void Maze::AddDirectionsVertical(std::vector<std::pair<int, int>>& directions, s
   }
 
   if (coords.first > minY) {
-    directions.push_back(std::pair<int, int>{ coords.first - 1, coords.second });
+    directions.emplace_back(coords.first - 1, coords.second);
   }
 
   if (coords.first < maxY) {
-    directions.push_back(std::pair<int, int>{ coords.first + 1, coords.second });
+    directions.emplace_back(coords.first + 1, coords.second);
   }
 }
 
@@ -321,11 +317,11 @@ void Maze::AddDirectionsHorizontal(std::vector<std::pair<int, int>>& directions,
   }
 
   if (coords.second > minX) {
-    directions.push_back(std::pair<int, int>{ coords.first, coords.second - 1 });
+    directions.emplace_back(coords.first, coords.second - 1);
   }
 
   if (coords.second < maxX) {
-    directions.push_back(std::pair<int, int>{ coords.first, coords.second + 1 });
+    directions.emplace_back(coords.first, coords.second + 1);
   }
 }
 
