@@ -234,16 +234,8 @@ void Maze::CreateRoute(Room* keyStart, Room* keyFinish) {
   // Choose step
   std::vector<std::pair<int, int>> directions;
 
-  int count = 0;
-
   // Levit's magic
   while (!queue.empty()) {
-    count++;
-
-    if (count > 50) {
-      throw;
-    }
-
     const std::pair<int, int> coord = queue.front();
     queue.pop_front();
     Maze::stateMap[coord.first][coord.second] = SearchState::checked;
