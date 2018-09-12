@@ -9,6 +9,7 @@
 class Maze {
 private:
   static std::mt19937 generator;
+  static int roomDataVariantsCount;
   static std::map<int, const RoomData*> roomDataVariants;
   static std::map<int, std::map<int, Room*>> grid;
   static std::map<int, std::map<int, int>> heightMap;
@@ -23,6 +24,7 @@ public:
   static FString GenerateSeed();
   static void SeedRandom(FString seed = Maze::GenerateSeed());
   static void InitRoomLocations();
+  static void InitRoomLocation(std::vector<DirectionVariant> dvs, Coordinates coords);
   static void ClearDataContainers();
   static void ClearPointers();
   static void PlaceStart();
