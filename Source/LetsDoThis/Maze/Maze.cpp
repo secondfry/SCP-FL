@@ -17,6 +17,7 @@
 #include <string>
 
 std::mt19937 Maze::generator;
+FString Maze::seed = "";
 int Maze::roomDataVariantsCount = 0;
 std::map<int, const RoomData*> Maze::roomDataVariants;
 std::map<int, std::map<int, Room*>> Maze::grid;
@@ -24,17 +25,17 @@ std::map<int, std::map<int, int>> Maze::heightMap;
 std::map<int, std::map<int, int>> Maze::stateMap;
 std::map<int, std::map<int, int>> Maze::costMap;
 std::map<int, std::map<int, std::pair<int, int>>> Maze::jumpMap;
-Room* Maze::start = nullptr;
 std::vector<FName> Maze::keyRooms;
+int Maze::checksum = 0;
 
 TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed) {
   // Done once
   Maze::InitRoomLocations();
 
   // Done each time
+  Maze::InitChecksum();
   Maze::SeedRandom(seed);
   Maze::ClearDataContainers();
-  Maze::ClearPointers();
   Maze::InitKeyRooms();
   Maze::PlaceStart();
   Maze::PlaceAllKeyRooms();
@@ -43,8 +44,11 @@ TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed) {
 }
 
 FString Maze::GenerateSeed() {
-  unsigned HEARTHSTONE = std::chrono::system_clock::now().time_since_epoch().count();
-  Maze::generator.seed(HEARTHSTONE);
+  if (Maze::seed == "") {
+    unsigned HEARTHSTONE = std::chrono::system_clock::now().time_since_epoch().count();
+    Maze::generator.seed(HEARTHSTONE);
+  }
+
   std::stringstream stream;
   for (int i = 0; i < 16; i++) {
     stream << std::hex << Maze::Roll(0, 15);
@@ -52,7 +56,12 @@ FString Maze::GenerateSeed() {
   return stream.str().c_str();
 }
 
+void Maze::InitChecksum() {
+  Maze::checksum = 0;
+}
+
 void Maze::SeedRandom(FString seed) {
+  Maze::seed = seed;
   std::string str = TCHAR_TO_UTF8(*seed);
   std::seed_seq seq(str.begin(), str.end());
   Maze::generator.seed(seq);
@@ -103,17 +112,8 @@ void Maze::ClearDataContainers() {
   Maze::keyRooms.clear();
 }
 
-void Maze::ClearPointers() {
-  if (Maze::start != nullptr) {
-    delete Maze::start;
-  }
-
-  Maze::start = nullptr;
-}
-
 void Maze::PlaceStart() {
-  Maze::start = new Room();
-  Maze::grid[0][0] = Maze::start->AddExit(Direction::north)->SetName("SPAWN_CLASSD")->SetPlace(0, 0, 0);
+  Maze::grid[0][0] = (new Room())->AddExit(Direction::north)->SetName("SPAWN_CLASSD")->SetPlace(0, 0, 0)->IsKeyRoom(true);
   Maze::heightMap[0][0] = 57;
 }
 
@@ -126,7 +126,7 @@ void Maze::InitKeyRooms() {
 }
 
 void Maze::PlaceAllKeyRooms() {
-  auto prevRoom = Maze::start;
+  auto prevRoom = Maze::grid[0][0];
   for (const FName name : Maze::keyRooms) {
     prevRoom = Maze::PlaceNextKeyRoom(prevRoom, name);
   }
@@ -148,10 +148,7 @@ Room* Maze::PlaceNextKeyRoom(Room* prevRoom, FName name) {
     Maze::IsNextRoomPlaceOccupied(nextRoomCoordinates + exitDirection)
   );
 
-  auto nextRoom = new Room();
-  nextRoom->AddExit(exitDirection);
-  nextRoom->SetName(name);
-  nextRoom->SetPlace(nextRoomCoordinates);
+  const auto nextRoom = (new Room())->AddExit(exitDirection)->SetName(name)->SetPlace(nextRoomCoordinates)->IsKeyRoom(true);
 
   Maze::grid[nextRoom->GetPlaceY()][nextRoom->GetPlaceX()] = nextRoom;
   Maze::heightMap[nextRoom->GetPlaceY()][nextRoom->GetPlaceX()] = 57;
@@ -351,27 +348,62 @@ TArray<FRoomDataStruct>* Maze::IterateGrid() {
       }
 
       Maze::AddGridExits(room);
+      Maze::DeltaChecksum(room);
       ret->Add(room->MakeRoomDataStruct());
     }
   }
 
-  return ret;
+  if (Maze::VerifyChecksum()) {
+    return ret;
+  }
+
+  return Maze::GenerateMap();
 }
 
 void Maze::AddGridExits(Room* room) {
-  if (Maze::grid[room->GetPlaceY() + 1][room->GetPlaceX()] != nullptr) {
-    room->AddExit(Direction::north);
+  // Key rooms have exits added upon creation
+  if (room->IsKeyRoom()) {
+    return;
   }
 
-  if (Maze::grid[room->GetPlaceY() - 1][room->GetPlaceX()] != nullptr) {
-    room->AddExit(Direction::south);
+  for (Direction dir : { Direction::north, Direction::east, Direction::south, Direction::west }) {
+    Maze::CheckGridExit(room, dir);
+  }
+}
+
+void Maze::CheckGridExit(Room* room, Direction dir) {
+  const Coordinates suspectCoords = room->GetPlace() + dir;
+  Room* suspectRoom = Maze::grid[suspectCoords.y][suspectCoords.x];
+  if (suspectRoom == nullptr) {
+    return;
   }
 
-  if (Maze::grid[room->GetPlaceY()][room->GetPlaceX() + 1] != nullptr) {
-    room->AddExit(Direction::east);
+  if (suspectRoom->IsKeyRoom() && suspectRoom->GetFirstExit() != Room::Reverse(dir)) {
+    return;
   }
 
-  if (Maze::grid[room->GetPlaceY()][room->GetPlaceX() - 1] != nullptr) {
-    room->AddExit(Direction::west);
+  room->AddExit(dir);
+}
+
+void Maze::DeltaChecksum(Room* room) {
+  for (auto& item : room->GetExits()) {
+    switch (item.first) {
+      case Direction::north:
+      case Direction::east:
+        Maze::checksum += 1;
+        continue;
+      case Direction::south:
+      case Direction::west:
+        Maze::checksum -= 1;
+        continue;
+    }
   }
+}
+
+bool Maze::VerifyChecksum() {
+  return Maze::checksum == 0;
+}
+
+FString Maze::GetSeed() {
+  return Maze::seed;
 }

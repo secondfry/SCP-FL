@@ -10,8 +10,8 @@
  * 
  */
 USTRUCT(BlueprintType)
-struct LETSDOTHIS_API FRoomDataStruct
-{
+
+struct LETSDOTHIS_API FRoomDataStruct {
   GENERATED_BODY()
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")

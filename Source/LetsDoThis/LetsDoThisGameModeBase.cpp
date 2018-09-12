@@ -2,10 +2,12 @@
 
 #include "LetsDoThisGameModeBase.h"
 
-TArray<FRoomDataStruct> ALetsDoThisGameModeBase::GenerateMap(FString seed) {
+TArray<FRoomDataStruct> ALetsDoThisGameModeBase::GenerateMap(FString& seedOut, FString seed) {
   if (seed == "") {
     seed = Maze::GenerateSeed();
   }
 
-  return *Maze::GenerateMap(seed);
+  auto ret = *Maze::GenerateMap(seed);
+  seedOut = Maze::GetSeed();
+  return ret;
 }

@@ -9,6 +9,7 @@
 class Maze {
 private:
   static std::mt19937 generator;
+  static FString seed;
   static int roomDataVariantsCount;
   static std::map<int, const RoomData*> roomDataVariants;
   static std::map<int, std::map<int, Room*>> grid;
@@ -16,17 +17,17 @@ private:
   static std::map<int, std::map<int, int>> stateMap;
   static std::map<int, std::map<int, int>> costMap;
   static std::map<int, std::map<int, std::pair<int, int>>> jumpMap;
-  static Room* start;
   static std::vector<FName> keyRooms;
+  static int checksum;
 
 public:
   static TArray<FRoomDataStruct>* GenerateMap(FString seed = Maze::GenerateSeed());
   static FString GenerateSeed();
+  static void InitChecksum();
   static void SeedRandom(FString seed = Maze::GenerateSeed());
   static void InitRoomLocations();
   static void InitRoomLocation(std::vector<DirectionVariant> dvs, Coordinates coords);
   static void ClearDataContainers();
-  static void ClearPointers();
   static void PlaceStart();
   static void InitKeyRooms();
   static void PlaceAllKeyRooms();
@@ -41,8 +42,12 @@ public:
   static void AddDirectionsVertical(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minY, int maxY);
   static void AddDirectionsHorizontal(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX);
   static void SafeCreateCorridor(int x, int y);
-  static void AddGridExits(Room* room);
   static TArray<FRoomDataStruct>* IterateGrid();
+  static void AddGridExits(Room* room);
+  static void CheckGridExit(Room* room, Direction dir);
+  static void DeltaChecksum(Room* room);
+  static bool VerifyChecksum();
+  static FString GetSeed();
 };
 
 enum SearchState {
