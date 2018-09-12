@@ -7,130 +7,199 @@
 #include "Room.h"
 #include "RoomDataStruct.h"
 
+#include <algorithm>
+#include <chrono>
 #include <deque>
+#include <iomanip>
 #include <map>
 #include <random>
+#include <sstream>
 #include <string>
 
 std::mt19937 Maze::generator;
-std::map<int, RoomData*> Maze::roomDataVariants;
+std::map<int, const RoomData*> Maze::roomDataVariants;
 std::map<int, std::map<int, Room*>> Maze::grid;
 std::map<int, std::map<int, int>> Maze::heightMap;
 std::map<int, std::map<int, int>> Maze::stateMap;
 std::map<int, std::map<int, int>> Maze::costMap;
 std::map<int, std::map<int, std::pair<int, int>>> Maze::jumpMap;
-Room* Maze::start;
+Room* Maze::start = nullptr;
+std::vector<FName> Maze::keyRooms;
 
-TArray<FRoomDataStruct> Maze::generateMap() {
-  Maze::initRoomLocations();
-  Maze::clearGrid();
-  Maze::placeStart();
-  Maze::placeAllKeyRooms();
+TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed) {
+  // Done once
+  Maze::InitRoomLocations();
 
-  return TArray<FRoomDataStruct>{ };
+  // Done each time
+  Maze::SeedRandom(seed);
+  Maze::ClearDataContainers();
+  Maze::ClearPointers();
+  Maze::InitKeyRooms();
+  Maze::PlaceStart();
+  Maze::PlaceAllKeyRooms();
+
+  return Maze::IterateGrid();
 }
 
-void Maze::initRoomLocations() {
+FString Maze::GenerateSeed() {
+  unsigned HEARTHSTONE = std::chrono::system_clock::now().time_since_epoch().count();
+  Maze::generator.seed(HEARTHSTONE);
+  std::stringstream stream;
+  for (int i = 0; i < 16; i++) {
+    stream << std::hex << Maze::Roll(0, 15);
+  }
+  return stream.str().c_str();
+}
+
+void Maze::SeedRandom(FString seed) {
+  std::string str = TCHAR_TO_UTF8(*seed);
+  std::seed_seq seq(str.begin(), str.end());
+  Maze::generator.seed(seq);
+}
+
+void Maze::InitRoomLocations() {
   if (!Maze::roomDataVariants.empty()) {
     return;
   }
 
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(0, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 4, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(1, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 3, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(2, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 2, 2, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(3, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 3, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(4, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 3, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(5, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 2, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(6, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 2, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(7, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 3, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(8, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left, DirectionVariant::right }, Coordinates{ 0, 2, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(9, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 1, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(10, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 2, 0, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(11, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 2, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(12, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, 0, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(13, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -2, 2, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(14, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -1, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(15, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, -1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(16, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -2, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(17, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, 0, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(18, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -3, 1, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(19, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -2, 0, 0 } }));
-  Maze::roomDataVariants.insert(std::pair<int, RoomData*>(20, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, -1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(0, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 4, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(1, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 3, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(2, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 2, 2, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(3, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 3, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(4, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 3, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(5, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 2, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(6, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 2, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(7, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 3, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(8, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left, DirectionVariant::right }, Coordinates{ 0, 2, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(9, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 1, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(10, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 2, 0, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(11, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 2, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(12, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, 0, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(13, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -2, 2, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(14, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -1, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(15, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, -1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(16, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -2, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(17, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, 0, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(18, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -3, 1, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(19, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -2, 0, 0 } }));
+  Maze::roomDataVariants.insert(std::pair<int, const RoomData*>(20, new RoomData{ std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, -1, 0 } }));
 }
 
-void Maze::clearGrid() {
+void Maze::ClearDataContainers() {
   Maze::grid.clear();
+  Maze::heightMap.clear();
+  Maze::stateMap.clear();
+  Maze::costMap.clear();
+  Maze::jumpMap.clear();
+  Maze::keyRooms.clear();
 }
 
-void Maze::placeStart() {
+void Maze::ClearPointers() {
+  if (Maze::start != nullptr) {
+    delete Maze::start;
+  }
+
+  Maze::start = nullptr;
+}
+
+void Maze::PlaceStart() {
   Maze::start = new Room();
   Maze::grid[0][0] = Maze::start->AddExit(Direction::north)->SetName("SPAWN_CLASSD")->SetPlace(0, 0, 0);
   Maze::heightMap[0][0] = 57;
 }
 
-void Maze::placeAllKeyRooms() {
-  auto prevRoom = Maze::start;
+void Maze::InitKeyRooms() {
   for (const FName name : { "CR_914", "CR_173", "ROOM1", "ROOM2" }) {
-    prevRoom = Maze::placeNextKeyRoom(prevRoom, name);
+    Maze::keyRooms.push_back(name);
+  }
+
+  std::shuffle(std::begin(Maze::keyRooms), std::end(Maze::keyRooms), Maze::generator);
+}
+
+void Maze::PlaceAllKeyRooms() {
+  auto prevRoom = Maze::start;
+  for (const FName name : Maze::keyRooms) {
+    prevRoom = Maze::PlaceNextKeyRoom(prevRoom, name);
   }
 }
 
-Room* Maze::placeNextKeyRoom(Room* prevRoom, FName name) {
-  auto roomData = Maze::getNextRoomData();
+Room* Maze::PlaceNextKeyRoom(Room* prevRoom, FName name) {
+  Direction exitDirection;
+  Coordinates nextRoomCoordinates;
 
-  while (
-    Maze::isNextRoomPlaceOccupied(prevRoom->GetPlaceX() + roomData->coords.x, prevRoom->GetPlaceY() + roomData->coords.y)
-  ) {
-    roomData = Maze::getNextRoomData();
-  }
+  do {
+    auto roomData = Maze::GetNextRoomData();
+    roomData->coords = roomData->coords * prevRoom->GetFirstExit();
+    nextRoomCoordinates = prevRoom->GetPlace() + roomData->coords;
+
+    const auto exitID = Maze::RollRoomExit(roomData->exits.size());
+    exitDirection = prevRoom->GetFirstExit() + roomData->exits[exitID];
+  } while (
+    Maze::IsNextRoomPlaceOccupied(nextRoomCoordinates) ||
+    Maze::IsNextRoomPlaceOccupied(nextRoomCoordinates + exitDirection)
+  );
 
   auto nextRoom = new Room();
-  auto const exitID = Maze::rollRoomExit(roomData->exits.size());
-  nextRoom->AddExit(prevRoom->GetFirstExit() + roomData->exits[exitID]);
+  nextRoom->AddExit(exitDirection);
   nextRoom->SetName(name);
-  nextRoom->SetPlace(prevRoom->GetPlaceX() + roomData->coords.x, prevRoom->GetPlaceY() + roomData->coords.y, prevRoom->GetPlaceZ() + roomData->coords.z);
+  nextRoom->SetPlace(nextRoomCoordinates);
 
   Maze::grid[nextRoom->GetPlaceY()][nextRoom->GetPlaceX()] = nextRoom;
+  Maze::heightMap[nextRoom->GetPlaceY()][nextRoom->GetPlaceX()] = 57;
 
-  Maze::createRoute(prevRoom, nextRoom);
+#ifdef SF_DEBUG_MAZE
+  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, (std::string("NEXT X: ") + std::to_string(nextRoom->GetPlaceX()) + std::string(" Y: ") + std::to_string(nextRoom->GetPlaceY())).c_str());
+  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, (std::string("NEXT EXIT: ") + std::to_string(nextRoom->GetFirstExit())).c_str());
+#endif
+
+  Maze::CreateRoute(prevRoom, nextRoom);
 
   return nextRoom;
 }
 
-RoomData* Maze::getNextRoomData() {
-  auto const nextRoomID = Maze::rollNextRoom();
-  RoomData* nextRoomData = Maze::roomDataVariants[nextRoomID];
-  return nextRoomData;
+RoomData* Maze::GetNextRoomData() {
+  const auto nextRoomID = Maze::RollNextRoom();
+  const RoomData* nextRoomData = Maze::roomDataVariants[nextRoomID];
+  auto ret = new RoomData(*nextRoomData);
+  return ret;
 }
 
-int Maze::rollNextRoom(int seed) {
-  return roll(0, 20, seed);
+int Maze::RollNextRoom() {
+  return Maze::Roll(0, 20);
 }
 
-int Maze::rollRoomExit(int exits, int seed) {
-  return roll(0, exits - 1, seed);
+int Maze::RollRoomExit(int exits) {
+  return Maze::Roll(0, exits - 1);
 }
 
-int Maze::roll(int min, int max, int seed) {
+int Maze::Roll(int min, int max) {
   const std::uniform_int_distribution<int> uniform_int_distribution(min, max);
-  generator.seed(seed);
   return uniform_int_distribution(generator);
 }
 
-bool Maze::isNextRoomPlaceOccupied(int x, int y) {
+bool Maze::IsNextRoomPlaceOccupied(Coordinates coords) {
+  int x = coords.x;
+  int y = coords.y;
+
+  if (Maze::grid[y][x] != nullptr) {
+    auto occupied = Maze::grid[y][x];
+  }
+
   return Maze::grid[y][x] != nullptr;
 }
 
-void Maze::createRoute(Room* keyStart, Room* keyFinish) {
+void Maze::CreateRoute(Room* keyStart, Room* keyFinish) {
   // Actually route from "connection" rooms, not from key rooms themselves
-  Room* start = keyStart->CreateAdjacent(keyStart->GetFirstExit());
-  Room* finish = keyFinish->CreateAdjacent(keyFinish->GetFirstExit());
+  Room* start = new Room();
+  start->SetPlace(keyStart->GetPlace() + keyStart->GetFirstExit());
+  Room* finish = new Room();
+  finish->SetPlace(keyFinish->GetPlace() + keyFinish->GetFirstExit());
 
   // Widen search for reasons
-  const int minY = start->GetPlaceY() > finish->GetPlaceY() ? finish->GetPlaceY() - 1 : start->GetPlaceY() - 1;
-  const int maxY = start->GetPlaceY() > finish->GetPlaceY() ? start->GetPlaceY() + 1 : finish->GetPlaceY() + 1;
-  const int minX = start->GetPlaceX() > finish->GetPlaceX() ? finish->GetPlaceX() - 1 : start->GetPlaceX() - 1;
-  const int maxX = start->GetPlaceX() > finish->GetPlaceX() ? start->GetPlaceX() + 1 : finish->GetPlaceX() + 1;
+  const int minY = start->GetPlaceY() > finish->GetPlaceY() ? finish->GetPlaceY() - 2 : start->GetPlaceY() - 2;
+  const int maxY = start->GetPlaceY() > finish->GetPlaceY() ? start->GetPlaceY() + 2 : finish->GetPlaceY() + 2;
+  const int minX = start->GetPlaceX() > finish->GetPlaceX() ? finish->GetPlaceX() - 2 : start->GetPlaceX() - 2;
+  const int maxX = start->GetPlaceX() > finish->GetPlaceX() ? start->GetPlaceX() + 2 : finish->GetPlaceX() + 2;
 
   // Start and finish are free by default
   Maze::heightMap[start->GetPlaceY()][start->GetPlaceX()] = 0;
@@ -140,7 +209,7 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
   for (int j = minY; j < maxY; j++) {
     for (int i = minX; i < maxX; i++) {
       if (!Maze::heightMap[j][i]) {
-        Maze::heightMap[j][i] = Maze::roll(1, 5);
+        Maze::heightMap[j][i] = Maze::Roll(1, 5);
       }
 
       Maze::stateMap[j][i] = SearchState::clean;
@@ -159,10 +228,18 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
 
   // Choose step
   std::vector<std::pair<int, int>> directions;
-  
+
+  int count = 0;
+
   // Levit's magic
   while (!queue.empty()) {
-    std::pair<int, int> coord = queue.front();
+    count++;
+
+    if (count > 50) {
+      throw;
+    }
+
+    const std::pair<int, int> coord = queue.front();
     queue.pop_front();
     Maze::stateMap[coord.first][coord.second] = SearchState::checked;
 
@@ -187,16 +264,20 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
     }
   }
 
-  if (Maze::jumpMap[finish->GetPlaceY()][finish->GetPlaceX()] == std::pair<int, int> {INT_MIN, INT_MIN}) {
+  if (Maze::jumpMap[finish->GetPlaceY()][finish->GetPlaceX()] == std::pair<int, int>{ INT_MIN, INT_MIN }) {
     // TODO trigger event instead of panic message
+#ifdef SF_DEBUG_MAZE
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "FUCK THIS SHIT");
+#endif
   } else {
+#ifdef SF_DEBUG_MAZE
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "IT WORKS");
+#endif
 
     std::vector<std::pair<int, int>> path;
     for (
-      std::pair<int, int> jump = { finish->GetPlaceY(), finish->GetPlaceX() }; 
-      jump != std::pair<int, int> {INT_MIN, INT_MIN};
+      std::pair<int, int> jump = { finish->GetPlaceY(), finish->GetPlaceX() };
+      jump != std::pair<int, int>{ INT_MIN, INT_MIN };
       jump = Maze::jumpMap[jump.first][jump.second]
     ) {
       path.push_back(jump);
@@ -205,10 +286,14 @@ void Maze::createRoute(Room* keyStart, Room* keyFinish) {
 
     for (size_t i = 0; i < path.size(); ++i) {
       Maze::heightMap[path[i].first][path[i].second] = 0;
+      Maze::SafeCreateCorridor(path[i].second, path[i].first);
+
+#ifdef SF_DEBUG_MAZE
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, (std::string("X: ") + std::to_string(path[i].second) + std::string(" Y: ") + std::to_string(path[i].first)).c_str());
+#endif
     }
   }
-  
+
 }
 
 void Maze::AddDirections(std::vector<std::pair<int, int>>& directions, std::pair<int, int> coords, int minX, int maxX, int minY, int maxY) {
@@ -222,11 +307,11 @@ void Maze::AddDirectionsVertical(std::vector<std::pair<int, int>>& directions, s
   }
 
   if (coords.first > minY) {
-    directions.push_back(std::pair<int, int> { coords.first - 1, coords.second });
+    directions.push_back(std::pair<int, int>{ coords.first - 1, coords.second });
   }
 
   if (coords.first < maxY) {
-    directions.push_back(std::pair<int, int> { coords.first + 1, coords.second });
+    directions.push_back(std::pair<int, int>{ coords.first + 1, coords.second });
   }
 }
 
@@ -236,10 +321,60 @@ void Maze::AddDirectionsHorizontal(std::vector<std::pair<int, int>>& directions,
   }
 
   if (coords.second > minX) {
-    directions.push_back(std::pair<int, int> { coords.first, coords.second - 1 });
+    directions.push_back(std::pair<int, int>{ coords.first, coords.second - 1 });
   }
 
   if (coords.second < maxX) {
-    directions.push_back(std::pair<int, int> { coords.first, coords.second + 1 });
+    directions.push_back(std::pair<int, int>{ coords.first, coords.second + 1 });
+  }
+}
+
+void Maze::SafeCreateCorridor(int x, int y) {
+  if (Maze::grid[y][x] != nullptr) {
+    return;
+  }
+
+  Maze::grid[y][x] = (new Room())->SetPlace(x, y, 0);
+}
+
+TArray<FRoomDataStruct>* Maze::IterateGrid() {
+  auto ret = new TArray<FRoomDataStruct>();
+
+  for (auto& row : Maze::grid) {
+    for (auto& roomPair : row.second) {
+      auto room = roomPair.second;
+
+      if (room == nullptr) {
+        // TODO DEPLOY SECURITY ROBOTS PENETRATE NULL POINTER ACCESS
+        // WONTFIX?
+#ifdef SF_DEBUG_MAZE
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "NULL POINTER ACCESS SOMETHING IS TERRIBLY WRONG");
+#endif
+        continue;
+      }
+
+      Maze::AddGridExits(room);
+      ret->Add(room->MakeRoomDataStruct());
+    }
+  }
+
+  return ret;
+}
+
+void Maze::AddGridExits(Room* room) {
+  if (Maze::grid[room->GetPlaceY() + 1][room->GetPlaceX()] != nullptr) {
+    room->AddExit(Direction::north);
+  }
+
+  if (Maze::grid[room->GetPlaceY() - 1][room->GetPlaceX()] != nullptr) {
+    room->AddExit(Direction::south);
+  }
+
+  if (Maze::grid[room->GetPlaceY()][room->GetPlaceX() + 1] != nullptr) {
+    room->AddExit(Direction::east);
+  }
+
+  if (Maze::grid[room->GetPlaceY()][room->GetPlaceX() - 1] != nullptr) {
+    room->AddExit(Direction::west);
   }
 }

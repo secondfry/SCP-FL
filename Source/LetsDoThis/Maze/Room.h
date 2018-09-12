@@ -2,6 +2,9 @@
 
 #include <vector>
 #include <map>
+#include "RoomDataStruct.h"
+
+class Room;
 
 enum Direction {
   north,
@@ -27,6 +30,20 @@ struct Coordinates {
   int z;
 };
 
+inline Coordinates operator+(Coordinates c1, Coordinates c2) {
+  return Coordinates{ c1.x + c2.x, c1.y + c2.y, c1.z + c2.z };
+}
+
+inline Coordinates operator+(Coordinates coords, Direction dir) {
+  switch (dir) {
+  case Direction::north: return coords + Coordinates{ 0, 1, 0 };
+  case Direction::east: return coords + Coordinates{ 1, 0, 0 };
+  case Direction::south: return coords + Coordinates{ 0, -1, 0 };
+  case Direction::west: return coords + Coordinates{ -1, 0, 0 };
+  default: return coords + Coordinates{ 0, 0, 0 };
+  }
+}
+
 inline Coordinates operator*(Coordinates coords, Direction dir) {
   switch (dir) {
   case Direction::north: return coords;
@@ -45,8 +62,7 @@ struct RoomData {
 
 class Room {
 private:
-  std::map<Direction, Room*> neighbours;
-  std::vector<Direction> exits;
+  std::map<Direction, bool> exits;
   Coordinates coords;
   FName name;
 
@@ -54,51 +70,14 @@ private:
     return static_cast<Direction>((direction + 2) % 4);
   }
 
-  Room* GetAdjacent(const Direction direction) {
-    return this->neighbours[direction];
-  }
-
-  Room* GetOpposite(const Direction direction) {
-    return this->GetAdjacent(Room::Reverse(direction));
-  }
-
-  Room* SetAdjacent(const Direction direction, Room* room, bool const force = false) {
-    this->neighbours[direction] = room;
-    return this;
-  }
-
-  Room* SetOpposite(const Direction direction, Room* room, bool const force = false) {
-    return this->SetAdjacent(Room::Reverse(direction), room, force);
-  }
-
 public:
-  static Coordinates DirectionToCoordinates(const Direction direction) {
-    switch (direction) {
-    case Direction::north: return Coordinates{ 0, 1, 0 };
-    case Direction::east: return Coordinates{ 1, 0, 0 };
-    case Direction::south: return Coordinates{ 0, -1, 0 };
-    case Direction::west: return Coordinates{ -1, 0, 0 };
-    default: return Coordinates{ 0, 0, 0 };
-    }
-  }
-
-  Room* CreateAdjacent(const Direction direction) {
-    Room* ret = new Room();
-    Coordinates shift = Room::DirectionToCoordinates(direction);
-    ret->SetPlace(this->coords.x + shift.x, this->coords.y + shift.y, this->coords.z + shift.z);
-    this->SetAdjacent(direction, ret);
-    ret->SetOpposite(direction, this);
-    return ret;
-  }
-
-  bool HasAdjacent(const Direction direction) {
-    Room* adjacent = this->GetAdjacent(direction);
-    return adjacent != nullptr;
-  }
-
   Room* AddExit(const Direction dir) {
-    this->exits.push_back(dir);
+    this->exits[dir] = true;
     return this;
+  }
+
+  FName GetName() const {
+    return this->name;
   }
 
   Room* SetName(const FName name) {
@@ -111,6 +90,17 @@ public:
     this->coords.y = y;
     this->coords.z = z;
     return this;
+  }
+
+  Room* SetPlace(Coordinates coords) {
+    this->coords.x = coords.x;
+    this->coords.y = coords.y;
+    this->coords.z = coords.z;
+    return this;
+  }
+
+  Coordinates GetPlace() const {
+    return this->coords;
   }
 
   int GetPlaceX() const {
@@ -131,7 +121,17 @@ public:
       return Direction::north;
     }
 
-    return this->exits[0];
+    return this->exits.begin()->first;
   }
+
+  FRoomDataStruct MakeRoomDataStruct() {
+    return FRoomDataStruct {
+      this->name,
+      this->coords.x,
+      this->coords.y,
+      this->coords.z,
+      0
+    };
+  };
 
 };

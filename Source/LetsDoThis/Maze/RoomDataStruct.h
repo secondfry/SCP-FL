@@ -18,15 +18,14 @@ struct LETSDOTHIS_API FRoomDataStruct
   FName roomName;
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
-  float x;
+  int x;
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
-  float y;
+  int y;
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
-  float z;
+  int z;
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
-  float yaw;
-
+  int yaw;
 };
