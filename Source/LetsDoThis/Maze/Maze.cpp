@@ -63,27 +63,31 @@ void Maze::InitRoomLocations() {
     return;
   }
 
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 4, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 3, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 2, 2, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 3, 1, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ -1, 3, 0 });
   Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 0, 3, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 2, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 2, 1, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 3, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left, DirectionVariant::right }, Coordinates{ 0, 2, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 1, 1, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 2, 0, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 2, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, 0, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -2, 2, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -1, 1, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, -1, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite }, Coordinates{ 1, 3, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -2, 0, 0 });
   Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -2, 1, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, 0, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::right }, Coordinates{ -3, 1, 0 });
-  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -2, 0, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 2, 0, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::left }, Coordinates{ 2, 1, 0 });
+
   Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, -1, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ -1, 0, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, 0, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same }, Coordinates{ 1, -1, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::right }, Coordinates{ -1, 1, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::same, DirectionVariant::left }, Coordinates{ 1, 1, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -1, 3, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::right }, Coordinates{ -2, 3, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 1, 3, 0 });
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left }, Coordinates{ 2, 3, 0 });
+
+  Maze::InitRoomLocation(std::vector<DirectionVariant>{ DirectionVariant::opposite, DirectionVariant::left, DirectionVariant::right }, Coordinates{ 0, 2, 0 });
 }
 
 void Maze::InitRoomLocation(std::vector<DirectionVariant> dvs, Coordinates coords) {
