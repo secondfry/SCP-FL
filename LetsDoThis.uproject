@@ -1,13 +1,28 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.19",
+	"EngineAssociation": "{8B48FC3F-4F22-112F-CC67-D79265633DA7}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "LetsDoThis",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"AllDesktop",
+		"LinuxNoEditor",
+		"WindowsNoEditor",
+		"MacNoEditor"
 	]
 }
