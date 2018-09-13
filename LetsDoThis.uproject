@@ -12,5 +12,17 @@
 				"Engine"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"AllDesktop",
+		"LinuxNoEditor",
+		"WindowsNoEditor",
+		"MacNoEditor"
 	]
 }
