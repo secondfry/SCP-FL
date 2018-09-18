@@ -12,26 +12,29 @@
  * 
  */
 
-//USTRUCT(BlueprintType)
-//struct FSearchResultInfo
-//{
-//	GENERATED_USTRUCT_BODY()
+USTRUCT(BlueprintType)
+struct FSearchResultInfo
+{
+	GENERATED_USTRUCT_BODY()
 
-	//UPROPERTY(Category = "Network|Steam", BlueprintReadWrite)
-	//FName presentedSessionName;
+	UPROPERTY(Category = "Network|Steam", BlueprintReadOnly)
+	FString presentedSessionName;
 
-	//UPROPERTY(Category = "Network|Steam", BlueprintReadWrite)
-	//int presentedMaxNumberOfPlayers;
+	UPROPERTY(Category = "Network|Steam", BlueprintReadOnly)
+	int presentedMaxNumberOfPlayers;
 
-//	UPROPERTY(Category = "Network|Steam", BlueprintReadWrite)
-//	FOnlineSessionSearchResult foundSessions;
-//};
+	UPROPERTY(Category = "Network|Steam", BlueprintReadOnly)
+	int presentedCurrentNumberOfPlayers;
+
+};
 
 UCLASS()
 class LETSDOTHIS_API USCPFL_GameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	/**
+private:
+
+		/**
 	*	Function to host a game!
 	*
 	*	@Param		UserID			User that started the request
@@ -135,18 +138,23 @@ class LETSDOTHIS_API USCPFL_GameInstance : public UGameInstance
 	int requestedNumberOfPlayers = 20;
 	int requestedSearchResults = 200000;
 	int requestedPingBucket = 999;
+	TMap<int, FSearchResultInfo> sessionsMap;
+
+public:
 
 	UFUNCTION(BlueprintCallable, Category = "Network|Steam")
-		void StartOnlineGame(bool shouldUsePresence, bool shouldBeOnLAN, FName requestedSessionName, int requestedNumberOfPlayers);
-	
-	UFUNCTION(BlueprintCallable, Category = "Network|Steam")
-		void FindOnlineGames(bool shouldUsePresence, bool shouldBeOnLAN, int requestedSearchResults, int requestedPingBucket);
+	void StartOnlineGame(bool shouldUsePresence, bool shouldBeOnLAN, FName requestedSessionName, int requestedNumberOfPlayers);
 
 	UFUNCTION(BlueprintCallable, Category = "Network|Steam")
-		void JoinOnlineGame();
+	void FindOnlineGames(bool shouldUsePresence, bool shouldBeOnLAN, int requestedSearchResults, int requestedPingBucket);
 
 	UFUNCTION(BlueprintCallable, Category = "Network|Steam")
-		void DestroySessionAndLeaveGame();
+	void JoinOnlineGame(int sessionIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Network|Steam")
+	void DestroySessionAndLeaveGame();
+
+  UFUNCTION(BlueprintImplementableEvent, Category = "Network|Steam")
+  void OnSearchCompleted(const TMap<int, FSearchResultInfo>& searchResults);
+
 };
-
-

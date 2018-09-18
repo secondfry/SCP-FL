@@ -62,7 +62,7 @@ bool USCPFL_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId)
 	SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
 	SessionSettings->bIsDedicated = true;
 	// TODO 
-	//SessionSettings->OwningUserName = FString("My cool game");
+	//SessionSettings-> = FString("My cool game");
 
 	SessionSettings->Set(SETTING_MAPNAME, FString("PersistentComplex"), EOnlineDataAdvertisementType::ViaOnlineService);
 
@@ -70,7 +70,7 @@ bool USCPFL_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId)
 	OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
 
 	// Our delegate should get called when this is complete (doesn't need to be successful!)
-	return Sessions->CreateSession(*UserId, this->requestedSessionName, *SessionSettings);
+	return Sessions->CreateSession(0, this->requestedSessionName, *SessionSettings);
 }
 
 void USCPFL_GameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -184,13 +184,13 @@ void USCPFL_GameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId)
 
 	TSharedRef<FOnlineSessionSearch> SearchSettingsRef = SessionSearch.ToSharedRef();
 
+
+
 	// Set the Delegate to the Delegate Handle of the FindSession function
 	OnFindSessionsCompleteDelegateHandle = Sessions->AddOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegate);
 
 	// Finally call the SessionInterface function. The Delegate gets called once this is finished
 	Sessions->FindSessions(*UserId, SearchSettingsRef);
-
-	SessionSearch->SearchResults;
 }
 
 void USCPFL_GameInstance::OnFindSessionsComplete(bool bWasSuccessful)
@@ -226,12 +226,20 @@ void USCPFL_GameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 
 	// "SessionSearch->SearchResults" is an Array that contains all the information. You can access the Session in this and get a lot of information.
 	// This can be customized later on with your own classes to add more information that can be set and displayed
+	//Populate sessionsMap to expose to BPs for widget use
 	for (int32 SearchIdx = 0; SearchIdx < SessionSearch->SearchResults.Num(); SearchIdx++)
 	{
-		// OwningUserName is just the SessionName for now. I guess you can create your own Host Settings class and GameSession Class and add a proper GameServer Name here.
-		// This is something you can't do in Blueprint for example!
-		//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx + 1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
+		auto& searchResult = this->SessionSearch->SearchResults[SearchIdx];
+		auto searchResultInfoStruct = FSearchResultInfo
+		{
+			searchResult.Session.OwningUserName,
+			searchResult.Session.SessionSettings.NumPublicConnections,
+			searchResult.Session.NumOpenPublicConnections
+		};
+		
+		this->sessionsMap.Add(SearchIdx, searchResultInfoStruct);
 	}
+	this->OnSearchCompleted(sessionsMap);
 }
 
 bool USCPFL_GameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult& SearchResult)
@@ -288,7 +296,7 @@ void USCPFL_GameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessio
 
 	if (!Sessions.IsValid())
 	{
-		UE_LOG(LogWindows, Error, TEXT("Find session complete failed : session is not valid"));
+		UE_LOG(LogWindows, Error, TEXT("Join session complete failed : session is not valid"));
 		return;
 	}
 	
@@ -377,7 +385,7 @@ void USCPFL_GameInstance::FindOnlineGames(bool shouldUsePresence, bool shouldBeO
 	FindSessions(Player->GetPreferredUniqueNetId().GetUniqueNetId());
 }
 
-void USCPFL_GameInstance::JoinOnlineGame()
+void USCPFL_GameInstance::JoinOnlineGame(int sessionIndex)
 {
 	ULocalPlayer* const Player = GetFirstGamePlayer();
 
@@ -391,22 +399,15 @@ void USCPFL_GameInstance::JoinOnlineGame()
 		return;
 	}
 
-	for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
+	// To avoid something crazy, we filter sessions from ourself
+	if (SessionSearch->SearchResults[sessionIndex].Session.OwningUserId == Player->GetPreferredUniqueNetId().GetUniqueNetId())
 	{
-		// To avoid something crazy, we filter sessions from ourself
-		if (SessionSearch->SearchResults[i].Session.OwningUserId == Player->GetPreferredUniqueNetId().GetUniqueNetId())
-		{
-			continue;
-		}
-
-		SearchResult = SessionSearch->SearchResults[i];
-
-		// Once we found sounce a Session that is not ours, just join it. Instead of using a for loop, you could
-		// use a widget where you click on and have a reference for the GameSession it represents which you can use
-		// here
-		JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, SearchResult);
-		break;
+    UE_LOG(LogWindows, Error, TEXT("Join online game failed : tried to join your own session"));
+    return;
 	}
+
+  SearchResult = SessionSearch->SearchResults[sessionIndex];
+	JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, SearchResult);
 }
 
 void USCPFL_GameInstance::DestroySessionAndLeaveGame()
