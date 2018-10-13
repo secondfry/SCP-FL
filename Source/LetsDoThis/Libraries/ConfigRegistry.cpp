@@ -7,6 +7,8 @@
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 #include "../external/json.hpp"
 using json = nlohmann::json;
@@ -170,6 +172,8 @@ const std::string UConfigRegistry::GetConfigLocation() {
 
 #ifdef _WIN32
   const char* homedir = getenv("appdata");
+  std::string path(homedir);
+  path += "/SCPFL Indoctrination";
 #elif __linux__
   #include <unistd.h>
   #include <sys/types.h>
@@ -177,10 +181,15 @@ const std::string UConfigRegistry::GetConfigLocation() {
 
   struct passwd* pw = getpwuid(getuid());
   const char* homedir = pw->pw_dir;
+  std::string path(homedir);
+  path += "/.config/SCPFL Indoctrination";
 #endif
 
-  std::string path(homedir);
-  path += "/SCPFL Indoctrination/config.json";
+  if (!fs::is_directory(path)) {
+    fs::create_directories(path);
+  }
+
+  path += "/config.json";
 
 #ifdef POINTERS_I_HAVE_NO_IDEA_WHATS_GOING_ON_WITH_POINTERS
 #ifdef _WIN32
