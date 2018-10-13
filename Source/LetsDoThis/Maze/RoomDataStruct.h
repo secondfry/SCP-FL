@@ -15,7 +15,7 @@ struct LETSDOTHIS_API FRoomDataStruct {
   GENERATED_BODY()
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
-  FName roomName;
+  FString roomName;
 
   UPROPERTY(BlueprintReadWrite, Category = "Room Data")
   int x;

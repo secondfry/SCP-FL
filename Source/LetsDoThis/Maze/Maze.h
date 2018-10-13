@@ -17,21 +17,22 @@ private:
   static std::map<int, std::map<int, int>> stateMap;
   static std::map<int, std::map<int, int>> costMap;
   static std::map<int, std::map<int, std::pair<int, int>>> jumpMap;
-  static std::vector<FName> keyRooms;
+  static std::vector<FString> keyRooms;
   static int checksum;
 
 public:
-  static TArray<FRoomDataStruct>* GenerateMap(FString seed = Maze::GenerateSeed());
+  static TArray<FRoomDataStruct>* GenerateMap(FString seed = Maze::GenerateSeed(), TArray<FString> requestedRooms = Maze::GetDefaultKeyRooms());
   static FString GenerateSeed();
+  static TArray<FString> GetDefaultKeyRooms();
   static void InitChecksum();
   static void SeedRandom(FString seed = Maze::GenerateSeed());
   static void InitRoomLocations();
   static void InitRoomLocation(std::vector<DirectionVariant> dvs, Coordinates coords);
   static void ClearDataContainers();
-  static void PlaceStart();
-  static void InitKeyRooms();
+  static void PlaceStart(FString name = "SPAWN_CLASSD");
+  static void InitKeyRooms(TArray<FString> requestedRooms = { "CR_914", "CR_173" });
   static void PlaceAllKeyRooms();
-  static Room* PlaceNextKeyRoom(Room* prevRoom, FName name);
+  static Room* PlaceNextKeyRoom(Room* prevRoom, FString name);
   static RoomData* GetNextRoomData();
   static int RollNextRoom();
   static int RollRoomExit(int exits = 4);

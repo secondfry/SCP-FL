@@ -18,5 +18,5 @@ class LETSDOTHIS_API ALetsDoThisGameModeBase : public AGameModeBase {
 
 public:
   UFUNCTION(BlueprintCallable, Category = "Map Generation")
-  static TArray<FRoomDataStruct> GenerateMap(FString& seedOut, FString seed = "");
+  static TArray<FRoomDataStruct> GenerateMap(TArray<FString> requestedRooms, FString& seedOut, FString seed = "");
 };

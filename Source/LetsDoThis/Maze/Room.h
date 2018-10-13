@@ -61,7 +61,7 @@ inline bool operator==(Coordinates c1, Coordinates c2) {
 struct RoomData {
   std::vector<DirectionVariant> exits;
   Coordinates coords;
-  FName name;
+  FString name;
 };
 
 enum RoomType {
@@ -77,7 +77,7 @@ class Room {
 private:
   std::map<Direction, bool> exits;
   Coordinates coords;
-  FName name;
+  FString name;
   bool isKeyRoom;
   RoomType roomType;
   int yaw;
@@ -96,11 +96,11 @@ public:
     return this->exits;
   }
 
-  FName GetName() const {
+  FString GetName() const {
     return this->name;
   }
 
-  Room* SetName(const FName name) {
+  Room* SetName(const FString name) {
     this->name = name;
     return this;
   }
@@ -206,7 +206,7 @@ public:
 
     FString name = "Corridor_LCZ_";
     name += this->GetRoomTypeString();
-    this->name = FName(*name);
+    this->name = FString(*name);
   }
 
   void DecideYaw() {

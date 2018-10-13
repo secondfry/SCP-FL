@@ -25,10 +25,10 @@ std::map<int, std::map<int, int>> Maze::heightMap;
 std::map<int, std::map<int, int>> Maze::stateMap;
 std::map<int, std::map<int, int>> Maze::costMap;
 std::map<int, std::map<int, std::pair<int, int>>> Maze::jumpMap;
-std::vector<FName> Maze::keyRooms;
+std::vector<FString> Maze::keyRooms;
 int Maze::checksum = 0;
 
-TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed) {
+TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed, TArray<FString> requestedRooms) {
   // Done once
   Maze::InitRoomLocations();
 
@@ -36,8 +36,8 @@ TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed) {
   Maze::InitChecksum();
   Maze::SeedRandom(seed);
   Maze::ClearDataContainers();
-  Maze::InitKeyRooms();
-  Maze::PlaceStart();
+  Maze::PlaceStart(requestedRooms.Pop());
+  Maze::InitKeyRooms(requestedRooms);
   Maze::PlaceAllKeyRooms();
 
   return Maze::IterateGrid();
@@ -54,6 +54,10 @@ FString Maze::GenerateSeed() {
     stream << std::hex << Maze::Roll(0, 15);
   }
   return stream.str().c_str();
+}
+
+TArray<FString> Maze::GetDefaultKeyRooms() {
+  return TArray<FString> { "SPAWN_CLASSD", "CR_914", "CR_173", "ESCAPE_A" };
 }
 
 void Maze::InitChecksum() {
@@ -112,13 +116,13 @@ void Maze::ClearDataContainers() {
   Maze::keyRooms.clear();
 }
 
-void Maze::PlaceStart() {
-  Maze::grid[0][0] = (new Room())->AddExit(Direction::north)->SetName("SPAWN_CLASSD")->SetPlace(0, 0, 0)->IsKeyRoom(true);
+void Maze::PlaceStart(FString name) {
+  Maze::grid[0][0] = (new Room())->AddExit(Direction::north)->SetName(name)->SetPlace(0, 0, 0)->IsKeyRoom(true);
   Maze::heightMap[0][0] = 57;
 }
 
-void Maze::InitKeyRooms() {
-  for (const FName name : { "CR_914", "CR_173", "ROOM1", "ROOM2" }) {
+void Maze::InitKeyRooms(TArray<FString> requestedRooms) {
+  for (const FString name : requestedRooms) {
     Maze::keyRooms.push_back(name);
   }
 
@@ -127,12 +131,12 @@ void Maze::InitKeyRooms() {
 
 void Maze::PlaceAllKeyRooms() {
   auto prevRoom = Maze::grid[0][0];
-  for (const FName name : Maze::keyRooms) {
+  for (const FString name : Maze::keyRooms) {
     prevRoom = Maze::PlaceNextKeyRoom(prevRoom, name);
   }
 }
 
-Room* Maze::PlaceNextKeyRoom(Room* prevRoom, FName name) {
+Room* Maze::PlaceNextKeyRoom(Room* prevRoom, FString name) {
   Direction exitDirection;
   Coordinates nextRoomCoordinates;
 
