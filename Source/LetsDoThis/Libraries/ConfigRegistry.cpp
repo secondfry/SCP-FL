@@ -95,6 +95,43 @@ void UConfigRegistry::SetInt(const FString variable, const int value, const bool
   return SetVal<int>(variable, value, shouldWrite);
 }
 
+const std::vector<int> UConfigRegistry::GetIntVector(const FString variable, const std::vector<int> defaultValue) {
+  return GetVal<std::vector<int>>(variable, defaultValue);
+}
+
+void UConfigRegistry::SetIntVector(const FString variable, const std::vector<int> value, const bool shouldWrite) {
+  return SetVal<std::vector<int>>(variable, value, shouldWrite);
+}
+
+const TArray<int> UConfigRegistry::GetIntArray(const FString variable, const TArray<int> defaultValue) {
+  // Convert default value
+  std::vector<int> defaultStdValue {};
+  for (const int& elem : defaultValue) {
+    defaultStdValue.push_back(elem);
+  }
+
+  // Get with std types
+  std::vector<int> retStd = UConfigRegistry::GetIntVector(variable, defaultStdValue);
+
+  // Convert to output type
+  TArray<int> ret {};
+  for (const int& elem : retStd) {
+    ret.Add(elem);
+  }
+  return ret;
+}
+
+void UConfigRegistry::SetIntArray(const FString variable, const TArray<int> value, const bool shouldWrite) {
+  // Convert value
+  std::vector<int> stdValue {};
+  for (const int& elem : value) {
+    stdValue.push_back(elem);
+  }
+
+  // Set with std types
+  return UConfigRegistry::SetIntVector(variable, stdValue, shouldWrite);
+}
+
 const float UConfigRegistry::GetFloat(const FString variable, const float defaultValue) {
   return GetVal<float>(variable, defaultValue);
 }
