@@ -10,5 +10,7 @@ public class LetsDoThisTarget : TargetRules
 		Type = TargetType.Game;
 
 		ExtraModuleNames.AddRange( new string[] { "LetsDoThis" } );
+
+    bForceEnableExceptions = true;
 	}
 }

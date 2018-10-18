@@ -33,10 +33,15 @@ TArray<FRoomDataStruct>* Maze::GenerateMap(FString seed, TArray<FString> request
   Maze::InitRoomLocations();
 
   // Done each time
+  if (seed == "") {
+    seed = Maze::GenerateSeed();
+  }
+
   Maze::InitChecksum();
   Maze::SeedRandom(seed);
   Maze::ClearDataContainers();
-  Maze::PlaceStart(requestedRooms.Pop());
+  Maze::PlaceStart(requestedRooms[0]);
+  requestedRooms.RemoveAt(0);
   Maze::InitKeyRooms(requestedRooms);
   Maze::PlaceAllKeyRooms();
 

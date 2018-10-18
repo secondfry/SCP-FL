@@ -48,6 +48,15 @@ public:
   UFUNCTION(Category = "RuntimeConfiguration", BlueprintCallable)
   static void SetInt(const FString variable, const int value, const bool shouldWrite = false);
 
+  static const std::vector<int> GetIntVector(const FString variable, const std::vector<int> defaultValue);
+  static void SetIntVector(const FString variable, const std::vector<int> value, const bool shouldWrite = false);
+
+  UFUNCTION(Category = "RuntimeConfiguration", BlueprintPure)
+  static const TArray<int> GetIntArray(const FString variable, const TArray<int> defaultValue);
+
+  UFUNCTION(Category = "RuntimeConfiguration", BlueprintCallable)
+  static void SetIntArray(const FString variable, const TArray<int> value, const bool shouldWrite = false);
+
   UFUNCTION(Category = "RuntimeConfiguration", BlueprintPure)
   static const float GetFloat(const FString variable, const float defaultValue = 0);
 
