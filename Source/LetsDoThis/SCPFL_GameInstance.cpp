@@ -24,7 +24,7 @@ USCPFL_GameInstance::USCPFL_GameInstance(const FObjectInitializer& ObjectInitial
   OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &USCPFL_GameInstance::OnDestroySessionComplete);
 }
 
-bool USCPFL_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId)
+bool USCPFL_GameInstance::HostSession()
 {
   // Get the Online Subsystem to work with
   IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
@@ -42,10 +42,7 @@ bool USCPFL_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId)
     return false;
   }
 
-  if (!UserId.IsValid()) {
-    UE_LOG(LogWindows, Error, TEXT("Failed to create session : UserID is invalid"));
-    return false;
-  }
+  
   /*
   Fill in all the Session Settings that we want to use.
 
@@ -370,11 +367,8 @@ void USCPFL_GameInstance::StartOnlineGame(bool shouldUsePresence, bool shouldBeO
   this->requestedSessionName = requestedSessionName;
   this->requestedNumberOfPlayers = requestedNumberOfPlayers;
 
-  // Creating a local player where we can get the UserID from
-  ULocalPlayer* const Player = GetFirstGamePlayer();
-
   // Call our custom HostSession function. GameSessionName is a GameInstance variable
-  HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId());
+  HostSession();
 }
 
 void USCPFL_GameInstance::FindOnlineGames(bool shouldUsePresence, bool shouldBeOnLAN, int requestedSearchResults, int requestedPingBucket)
