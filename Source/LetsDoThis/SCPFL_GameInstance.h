@@ -39,7 +39,7 @@ private:
   *
   * @Param    UserID      User that started the request
   */
-  bool HostSession(TSharedPtr<const FUniqueNetId> UserId);
+  bool HostSession();
 
   /* Delegate called when session created */
   FOnCreateSessionCompleteDelegate OnCreateSessionCompleteDelegate;

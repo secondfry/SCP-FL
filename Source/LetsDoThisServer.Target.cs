@@ -1,12 +1,13 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 using UnrealBuildTool;
 using System.Collections.Generic;
 
 [SupportedPlatforms(UnrealPlatformClass.Server)]
-public class LetsDoThisServerTarget : TargetRules   // Change this line as shown previously
-{
-    public LetsDoThisServerTarget(TargetInfo Target) : base(Target)  // Change this line as shown previously
-    {
+public class LetsDoThisServerTarget : TargetRules {
+  public LetsDoThisServerTarget(TargetInfo Target) : base(Target)  {
     Type = TargetType.Server;
-    ExtraModuleNames.Add("LetsDoThis");    // Change this line as shown previously
-    }
+    ExtraModuleNames.Add("LetsDoThis");
+    bForceEnableExceptions = true;
+  }
 }
