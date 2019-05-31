@@ -4,7 +4,7 @@
 
 #include "TriHard.h"
 
-FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance) {
+FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingDynamic* LevelInstance) {
   PackageName = LevelInstance->GetWorldAssetPackageFName();
   PackageNameToLoad = LevelInstance->PackageNameToLoad;
   Location = LevelInstance->LevelTransform.GetLocation();
@@ -15,12 +15,12 @@ FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelI
   LODIndex = LevelInstance->GetLevelLODIndex();
 };
 
-FLevelStreamInstanceInfo UTriHard::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance) {
+FLevelStreamInstanceInfo UTriHard::GetLevelInstanceInfo(ULevelStreamingDynamic* LevelInstance) {
   return FLevelStreamInstanceInfo(LevelInstance);
 }
 
 void UTriHard::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo) {
-  UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+  UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
   if (World == nullptr) {
     return;
   }
@@ -45,9 +45,12 @@ void UTriHard::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStr
   if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true)) {
     PackageName = FName(*PackageNameStr);
   }
-  World->DelayGarbageCollection();
+
+  // WHY?
+  GEngine->DelayGarbageCollection();
+
   // Setup streaming level object that will load specified map
-  ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
+  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass(), NAME_None, RF_Transient, nullptr);
   StreamingLevel->SetWorldAssetByPackageName(PackageName);
   StreamingLevel->LevelColor = FColor::MakeRandomColor();
   StreamingLevel->SetShouldBeLoaded(LevelInstanceInfo.bShouldBeLoaded);

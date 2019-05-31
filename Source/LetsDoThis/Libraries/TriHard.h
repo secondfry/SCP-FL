@@ -4,10 +4,17 @@
 
 #pragma once
 
+// ...
 #include "CoreMinimal.h"
-#include "Engine/Engine.h"
-#include "Engine/LevelStreamingKismet.h"
+
+// BlueprintFunctionLibrary
 #include "Kismet/BlueprintFunctionLibrary.h"
+
+// LevelStreamingDynamic
+#include "Engine/LevelStreamingDynamic.h"
+
+// GEngine
+#include "Engine.h"
 
 #include "TriHard.generated.h"
 
@@ -40,7 +47,7 @@ struct FLevelStreamInstanceInfo {
   int32 LODIndex;
 
   FLevelStreamInstanceInfo() {}
-  FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance);
+  FLevelStreamInstanceInfo(ULevelStreamingDynamic* LevelInstance);
 
   FString ToString() const {
     return FString::Printf(TEXT("PackageName: %s\nPackageNameToLoad:%s\nLocation:%s\nRotation:%s\nbShouldBeLoaded:%s\nbShouldBeVisible:%s\nbShouldBlockOnLoad:%s\nLODIndex:%i")
@@ -59,12 +66,11 @@ struct FLevelStreamInstanceInfo {
  * 
  */
 UCLASS()
-
 class LETSDOTHIS_API UTriHard : public UBlueprintFunctionLibrary {
   GENERATED_BODY()
 
   UFUNCTION(Category = "LevelStreaming", BlueprintCallable)
-  static FLevelStreamInstanceInfo GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance);
+  static FLevelStreamInstanceInfo GetLevelInstanceInfo(ULevelStreamingDynamic* LevelInstance);
 
   UFUNCTION(Category = "LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
   static void AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
